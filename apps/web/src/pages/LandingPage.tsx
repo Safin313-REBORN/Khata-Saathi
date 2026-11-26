@@ -352,6 +352,8 @@ export function LandingPage() {
         <span style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
           <Link to="/privacy" style={{ textDecoration: 'underline' }}>Privacy</Link>
           <Link to="/terms" style={{ textDecoration: 'underline' }}>Terms</Link>
+          <Link to="/cookies" style={{ textDecoration: 'underline' }}>Cookies</Link>
+          <Link to="/refunds" style={{ textDecoration: 'underline' }}>Refunds</Link>
           <span>Not financial advice; not a payment system.</span>
         </span>
       </footer>

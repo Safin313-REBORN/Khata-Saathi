@@ -20,4 +20,14 @@
     <lastmod>2026-11-27</lastmod>
     <priority>0.5</priority>
   </url>
+  <url>
+    <loc>/cookies</loc>
+    <lastmod>2026-11-27</lastmod>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>/refunds</loc>
+    <lastmod>2026-11-27</lastmod>
+    <priority>0.4</priority>
+  </url>
 </urlset>
