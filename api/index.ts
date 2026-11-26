@@ -1,13 +1,15 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { buildApp } from '../apps/api/dist/app.js';
-import { createProviders } from '../apps/api/dist/providers.js';
-import { seedDemoData } from '../apps/api/dist/seed.js';
 
-let appPromise: ReturnType<typeof buildApp> | null = null;
+let appPromise: Promise<{ server: { emit: (ev: string, req: IncomingMessage, res: ServerResponse) => void } }> | null = null;
 
 async function getApp() {
   if (!appPromise) {
     appPromise = (async () => {
+      const [{ buildApp }, { createProviders }, { seedDemoData }] = await Promise.all([
+        import('../apps/api/dist/app.js'),
+        import('../apps/api/dist/providers.js'),
+        import('../apps/api/dist/seed.js'),
+      ]);
       const providers = createProviders();
       const existing = await providers.storage.listCustomers();
       if (existing.length === 0) {
