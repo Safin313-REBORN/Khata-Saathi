@@ -1,6 +1,12 @@
 import { expect, test } from '@playwright/test';
 
 test('smoke: landing -> dashboard parse & confirm -> ledger undo & reminder -> 390px mobile no overflow', async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on('console', (msg) => {
+    if (msg.type() === 'error') consoleErrors.push(msg.text());
+  });
+  page.on('pageerror', (err) => consoleErrors.push(err.message));
+
   await page.request.post('/api/seed');
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Bolo. Khata likh jaye.' })).toBeVisible();
@@ -42,4 +48,5 @@ test('smoke: landing -> dashboard parse & confirm -> ledger undo & reminder -> 3
     () => document.documentElement.scrollWidth > document.documentElement.clientWidth
   );
   expect(hasHorizontalScroll).toBe(false);
+  expect(consoleErrors).toEqual([]);
 });

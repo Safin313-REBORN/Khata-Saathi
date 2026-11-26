@@ -1,21 +1,36 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { CustomerLedgerPage } from './pages/CustomerLedgerPage';
-import { DashboardPage } from './pages/DashboardPage';
 import { LandingPage } from './pages/LandingPage';
-import { PrivacyPage, TermsPage } from './pages/LegalPages';
-import { NotFoundPage } from './pages/NotFoundPage';
+
+const DashboardPage = lazy(() =>
+  import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage }))
+);
+const CustomerLedgerPage = lazy(() =>
+  import('./pages/CustomerLedgerPage').then((m) => ({ default: m.CustomerLedgerPage }))
+);
+const PrivacyPage = lazy(() =>
+  import('./pages/LegalPages').then((m) => ({ default: m.PrivacyPage }))
+);
+const TermsPage = lazy(() =>
+  import('./pages/LegalPages').then((m) => ({ default: m.TermsPage }))
+);
+const NotFoundPage = lazy(() =>
+  import('./pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage }))
+);
 
 export function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/app" element={<DashboardPage />} />
-        <Route path="/app/customers/:id" element={<CustomerLedgerPage />} />
-        <Route path="/privacy" element={<PrivacyPage />} />
-        <Route path="/terms" element={<TermsPage />} />
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+      <Suspense fallback={<div className="wrap" style={{ padding: 36 }}>Loading...</div>}>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/app" element={<DashboardPage />} />
+          <Route path="/app/customers/:id" element={<CustomerLedgerPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

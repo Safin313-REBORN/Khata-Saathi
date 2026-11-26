@@ -139,6 +139,13 @@ export function CustomerLedgerPage() {
 
       <div className="ledger-main">
         <section>
+          <nav aria-label="Breadcrumb" className="no-print" style={{ marginBottom: 12, fontSize: 14, color: 'var(--stone)' }}>
+            <Link to="/" style={{ textDecoration: 'underline' }}>Home</Link>
+            {' / '}
+            <Link to="/app" style={{ textDecoration: 'underline' }}>Shop Counter</Link>
+            {' / '}
+            <span aria-current="page">{customer.name}</span>
+          </nav>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' }}>
             <div>
               <p className="lab" style={{ margin: '0 0 6px', color: 'var(--stone)' }}>

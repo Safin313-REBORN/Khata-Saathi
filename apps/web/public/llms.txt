@@ -1,0 +1,14 @@
+# Khata Saathi
+
+> Voice and text udhaar-khata ledger assistant for small shopkeepers in Pakistan.
+
+## Key Pages
+- `/` — Product overview, how it works, trust guarantees, and FAQ
+- `/app` — Shop counter voice/text entry dashboard and customer list
+- `/privacy` — Local-first privacy policy (no analytics, draft-only reminders)
+- `/terms` — Terms of use (record-keeping tool; not financial advice or a payment system)
+
+## Architecture
+- `packages/core`: Deterministic Roman Urdu & Urdu script parser, integer-only append-only ledger, 7 port interfaces
+- `apps/api`: Fastify + Zod + SQLite API with `/health/providers`
+- `apps/web`: React + Vite + TypeScript offline-capable PWA

@@ -354,7 +354,9 @@ export function DashboardPage() {
 
         {/* Center pane: Voice / text entry + read-back Confirm card */}
         <main className={`pane-chat ${mobileTab !== 'bolo' ? 'pane-hidden-mobile' : ''}`}>
-          <p className="lab" style={{ margin: 0, color: 'var(--stone)', textAlign: 'center' }}>Today</p>
+          <h1 className="lab" style={{ margin: 0, color: 'var(--stone)', textAlign: 'center', fontSize: 12 }}>
+            Today · Shop counter
+          </h1>
 
           <div className="chat-feed">
             {messages.map((m) => (
