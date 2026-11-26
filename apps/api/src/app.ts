@@ -49,10 +49,65 @@ const OcrImportSchema = z.object({
 });
 
 export async function buildApp(customProviders?: ProviderRegistry): Promise<FastifyInstance> {
-  const app = Fastify({ logger: false });
+  const app = Fastify({
+    logger: process.env.NODE_ENV !== 'test' && process.env.VITEST !== 'true',
+  });
   const providers = customProviders ?? createProviders();
 
-  await app.register(cors, { origin: true });
+  const allowedOrigins = (
+    process.env.CORS_ORIGINS ?? 'http://localhost:5173,http://127.0.0.1:5173,http://localhost:3001,http://127.0.0.1:3001'
+  )
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  await app.register(cors, {
+    origin: (origin, cb) => {
+      // Allow same-origin / non-browser requests (no Origin header) and configured origins
+      if (!origin || allowedOrigins.includes(origin)) {
+        cb(null, true);
+        return;
+      }
+      cb(new Error('Origin not allowed by CORS'), false);
+    },
+  });
+
+  // Lightweight in-memory rate limiter for /api/* routes
+  const rateLimitMax = Number(process.env.RATE_LIMIT_MAX || 120);
+  const rateWindowMs = 60_000;
+  const hits = new Map<string, { count: number; resetAt: number }>();
+
+  app.addHook('onRequest', async (req, reply) => {
+    if (!req.url.startsWith('/api/')) return;
+    const now = Date.now();
+    const ip = req.ip || 'local';
+    const entry = hits.get(ip);
+    if (!entry || now > entry.resetAt) {
+      hits.set(ip, { count: 1, resetAt: now + rateWindowMs });
+      return;
+    }
+    entry.count += 1;
+    if (entry.count > rateLimitMax) {
+      const retryAfterSec = Math.ceil((entry.resetAt - now) / 1000);
+      reply.header('Retry-After', String(retryAfterSec));
+      return reply.code(429).send({ error: 'Too many requests. Please try again shortly.' });
+    }
+  });
+
+  app.setErrorHandler((err, req, reply) => {
+    req.log.error(err);
+    const statusCode =
+      typeof err === 'object' && err !== null && 'statusCode' in err && typeof (err as { statusCode?: unknown }).statusCode === 'number'
+        ? (err as { statusCode: number }).statusCode
+        : 500;
+    const message =
+      statusCode >= 500
+        ? 'Internal server error'
+        : err instanceof Error
+          ? err.message
+          : 'Request error';
+    return reply.code(statusCode).send({ error: message });
+  });
 
   app.get('/health', async () => ({ ok: true, service: 'khata-saathi-api' }));
 

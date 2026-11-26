@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('smoke: landing -> dashboard parse & confirm -> ledger undo & reminder -> 390px mobile no overflow', async ({ page }) => {
+  await page.request.post('/api/seed');
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Bolo. Khata likh jaye.' })).toBeVisible();
 

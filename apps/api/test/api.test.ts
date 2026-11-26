@@ -85,4 +85,23 @@ describe('Khata Saathi API', () => {
     expect(rem.whatsappUrl).toContain('https://wa.me/');
     expect(rem.text).toContain('Rs 2,500');
   });
+
+  it('enforces CORS allowlist and rate limiting on /api/*', async () => {
+    const app = await buildApp(createProviders({ SQLITE_PATH: ':memory:' }));
+
+    const blockedCors = await app.inject({
+      method: 'GET',
+      url: '/api/shop',
+      headers: { origin: 'https://evil.example.com' },
+    });
+    expect(blockedCors.statusCode).toBe(500);
+
+    const allowedCors = await app.inject({
+      method: 'GET',
+      url: '/api/shop',
+      headers: { origin: 'http://localhost:5173' },
+    });
+    expect(allowedCors.statusCode).toBe(200);
+    expect(allowedCors.headers['access-control-allow-origin']).toBe('http://localhost:5173');
+  });
 });
