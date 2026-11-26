@@ -97,6 +97,19 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ text }),
     }),
+  askBot: (text: string) =>
+    fetchJson<
+      | { mode: 'bot_answer'; intent: string; reply: string; matchedCustomerId?: string | null }
+      | { mode: 'ledger_entry'; parse: ParseResult }
+    >('/api/bot/message', {
+      method: 'POST',
+      body: JSON.stringify({ text }),
+    }),
+  trainKeyword: (phrase: string, type: 'udhaar' | 'wapis') =>
+    fetchJson<{ ok: boolean; terms: { udhaar: string[]; wapis: string[] } }>('/api/nlu/train', {
+      method: 'POST',
+      body: JSON.stringify({ phrase, type }),
+    }),
   createTransaction: (payload: {
     customerId?: string;
     customerName?: string;

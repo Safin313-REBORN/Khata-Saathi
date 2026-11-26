@@ -59,6 +59,9 @@ export function DashboardPage() {
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showTeach, setShowTeach] = useState(false);
+  const [teachPhrase, setTeachPhrase] = useState('');
+  const [teachType, setTeachType] = useState<'udhaar' | 'wapis'>('wapis');
   const [listening, setListening] = useState(false);
   const [speechLang, setSpeechLang] = useState<'ur-PK' | 'en-IN'>('ur-PK');
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
@@ -93,7 +96,16 @@ export function DashboardPage() {
     setInputText('');
 
     try {
-      const parsed = await api.parseSentence(trimmed);
+      const botRes = await api.askBot(trimmed);
+      if (botRes.mode === 'bot_answer') {
+        setMessages((prev) => [...prev, { id: `b-${Date.now()}`, role: 'assistant', text: botRes.reply }]);
+        if (botRes.matchedCustomerId) {
+          setSelectedId(botRes.matchedCustomerId);
+        }
+        return;
+      }
+
+      const parsed = botRes.parse;
       const matchedCustomer = customers.find((c) => c.customer.id === parsed.matchedCustomerId);
       const resolvedName = matchedCustomer?.customer.name ?? parsed.customer ?? '';
       const resolvedType: 'udhaar' | 'wapis' = parsed.type === 'wapis' ? 'wapis' : 'udhaar';
@@ -571,8 +583,8 @@ export function DashboardPage() {
             </div>
           )}
 
-          {/* Quick-try examples */}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {/* Quick-try examples & Teach Bot */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             <button
               type="button"
               className="btn sm"
@@ -583,11 +595,59 @@ export function DashboardPage() {
             <button
               type="button"
               className="btn sm"
-              onClick={() => handleParse('Sara ne 400 wapis kiye')}
+              onClick={() => handleParse('Total kitna lena hai?')}
             >
-              &ldquo;Sara ne 400 wapis kiye&rdquo;
+              &ldquo;Total kitna lena hai?&rdquo;
+            </button>
+            <button
+              type="button"
+              className="btn sm"
+              onClick={() => setShowTeach((s) => !s)}
+            >
+              {showTeach ? 'Close trainer' : 'Teach bot slang'}
             </button>
           </div>
+
+          {showTeach && (
+            <form
+              className="card"
+              style={{ padding: 14, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!teachPhrase.trim()) return;
+                await api.trainKeyword(teachPhrase.trim(), teachType);
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: `tr-${Date.now()}`,
+                    role: 'assistant',
+                    text: `Learned: "${teachPhrase.trim()}" now means ${teachType}. Try using it in a sentence!`,
+                  },
+                ]);
+                setTeachPhrase('');
+                setShowTeach(false);
+              }}
+            >
+              <input
+                type="text"
+                aria-label="Local slang word"
+                placeholder="e.g. chukta or parchi"
+                value={teachPhrase}
+                onChange={(e) => setTeachPhrase(e.target.value)}
+                style={{ minHeight: 44, padding: '0 10px', border: '2px solid var(--ink)', borderRadius: 8 }}
+              />
+              <select
+                aria-label="Meaning"
+                value={teachType}
+                onChange={(e) => setTeachType(e.target.value as 'udhaar' | 'wapis')}
+                style={{ minHeight: 44, padding: '0 10px', border: '2px solid var(--ink)', borderRadius: 8 }}
+              >
+                <option value="wapis">Means Wapis (payment)</option>
+                <option value="udhaar">Means Udhaar (credit)</option>
+              </select>
+              <button type="submit" className="btn sm p">Save word</button>
+            </form>
+          )}
 
           <form
             className="composer"

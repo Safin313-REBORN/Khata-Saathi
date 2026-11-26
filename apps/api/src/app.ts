@@ -9,6 +9,8 @@ import {
   computeLedgerRows,
   createReversingEvent,
   customerLedgerToCsv,
+  parseKhataSentence,
+  respondWithKhataBot,
   sortCustomersByReminderPriority,
   summarizeCustomer,
   summarizeShop,
@@ -46,6 +48,11 @@ const UndoBodySchema = z.object({
 
 const OcrImportSchema = z.object({
   imageBase64: z.string().min(1),
+});
+
+const TrainKeywordSchema = z.object({
+  phrase: z.string().min(2).max(40),
+  type: z.enum(['udhaar', 'wapis']),
 });
 
 export async function buildApp(customProviders?: ProviderRegistry): Promise<FastifyInstance> {
@@ -178,7 +185,11 @@ export async function buildApp(customProviders?: ProviderRegistry): Promise<Fast
       return reply.code(400).send({ error: 'Text is required' });
     }
     const customers = await providers.storage.listCustomers();
-    const result = await providers.nlu.parse(parsedBody.data.text, { customers });
+    const result =
+      providers.nlu.providerName === 'rule-based-urdu-parser' &&
+      (customTerms.udhaar.length > 0 || customTerms.wapis.length > 0)
+        ? parseKhataSentence(parsedBody.data.text, customers, new Date(), customTerms)
+        : await providers.nlu.parse(parsedBody.data.text, { customers });
 
     let currentBalance = 0;
     if (result.matchedCustomerId) {
@@ -198,6 +209,80 @@ export async function buildApp(customProviders?: ProviderRegistry): Promise<Fast
       currentBalance,
       proposedNewBalance,
       nluProvider: providers.nlu.providerName,
+    };
+  });
+
+  const customTerms: { udhaar: string[]; wapis: string[] } = { udhaar: [], wapis: [] };
+
+  app.get('/api/nlu/terms', async () => ({ terms: customTerms }));
+
+  app.post('/api/nlu/train', async (req, reply) => {
+    const parsed = TrainKeywordSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return reply.code(400).send({ error: 'Valid phrase and type (udhaar/wapis) required' });
+    }
+    const clean = parsed.data.phrase.trim().toLowerCase();
+    const bucket = customTerms[parsed.data.type];
+    if (!bucket.includes(clean)) {
+      bucket.push(clean);
+    }
+    return { ok: true, terms: customTerms };
+  });
+
+  app.post('/api/bot/message', async (req, reply) => {
+    const parsedBody = ParseBodySchema.safeParse(req.body);
+    if (!parsedBody.success) {
+      return reply.code(400).send({ error: 'Text is required' });
+    }
+    const [meta, customers, transactions] = await Promise.all([
+      providers.storage.getShopMeta(),
+      providers.storage.listCustomers(),
+      providers.storage.listTransactions(),
+    ]);
+
+    const txByCustomer = new Map<string, typeof transactions>();
+    for (const tx of transactions) {
+      const list = txByCustomer.get(tx.customerId) ?? [];
+      list.push(tx);
+      txByCustomer.set(tx.customerId, list);
+    }
+    const summaries = sortCustomersByReminderPriority(
+      customers.map((c) => summarizeCustomer(c, txByCustomer.get(c.id) ?? []))
+    );
+    const shop = summarizeShop(meta, summaries);
+    const botReply = respondWithKhataBot(parsedBody.data.text, summaries, shop);
+
+    if (botReply.intent !== 'ledger_entry') {
+      return {
+        mode: 'bot_answer' as const,
+        ...botReply,
+      };
+    }
+
+    const parsed =
+      providers.nlu.providerName === 'rule-based-urdu-parser' &&
+      (customTerms.udhaar.length > 0 || customTerms.wapis.length > 0)
+        ? parseKhataSentence(parsedBody.data.text, customers, new Date(), customTerms)
+        : await providers.nlu.parse(parsedBody.data.text, { customers });
+
+    let currentBalance = 0;
+    if (parsed.matchedCustomerId) {
+      const rows = computeLedgerRows(txByCustomer.get(parsed.matchedCustomerId) ?? []);
+      currentBalance = rows.length > 0 ? rows[rows.length - 1].runningBalance : 0;
+    }
+    const proposedNewBalance =
+      parsed.amount !== null && parsed.type !== null
+        ? currentBalance + (parsed.type === 'udhaar' ? parsed.amount : -parsed.amount)
+        : null;
+
+    return {
+      mode: 'ledger_entry' as const,
+      parse: {
+        ...parsed,
+        currentBalance,
+        proposedNewBalance,
+        nluProvider: providers.nlu.providerName,
+      },
     };
   });
 

@@ -247,11 +247,14 @@ function extractDate(normalized: string, referenceDate: Date): string | null {
   return null;
 }
 
-function extractType(normalized: string): TransactionType | null {
+function extractType(
+  normalized: string,
+  customKeywords?: { udhaar?: string[]; wapis?: string[] }
+): TransactionType | null {
   const lower = normalized.toLowerCase();
 
-  for (const kw of WAPIS_KEYWORDS) {
-    if (kw.charCodeAt(0) > 127 ? normalized.includes(kw) : new RegExp(`\\b${kw}\\b`, 'i').test(lower)) {
+  for (const kw of [...WAPIS_KEYWORDS, ...(customKeywords?.wapis ?? [])]) {
+    if (kw.charCodeAt(0) > 127 ? normalized.includes(kw) : new RegExp(`\\b${escapeRegex(kw)}\\b`, 'i').test(lower)) {
       return 'wapis';
     }
   }
@@ -264,8 +267,8 @@ function extractType(normalized: string): TransactionType | null {
     }
   }
 
-  for (const kw of UDHAAR_KEYWORDS) {
-    if (kw.charCodeAt(0) > 127 ? normalized.includes(kw) : new RegExp(`\\b${kw}\\b`, 'i').test(lower)) {
+  for (const kw of [...UDHAAR_KEYWORDS, ...(customKeywords?.udhaar ?? [])]) {
+    if (kw.charCodeAt(0) > 127 ? normalized.includes(kw) : new RegExp(`\\b${escapeRegex(kw)}\\b`, 'i').test(lower)) {
       return 'udhaar';
     }
   }
@@ -422,7 +425,8 @@ function escapeRegex(s: string): string {
 export function parseKhataSentence(
   text: string,
   customers: Customer[] = [],
-  referenceDate = new Date()
+  referenceDate = new Date(),
+  customKeywords?: { udhaar?: string[]; wapis?: string[] }
 ): ParsedEntry {
   const trimmed = text.trim();
   if (!trimmed) {
@@ -441,7 +445,7 @@ export function parseKhataSentence(
 
   const normalized = normalizeDigits(trimmed);
   const { amount, matchedSpan } = extractAmount(normalized);
-  const type = extractType(normalized);
+  const type = extractType(normalized, customKeywords);
   const date = extractDate(normalized, referenceDate);
   const rawCustomer = extractRawCustomerName(normalized);
   const customerMatch = matchCustomer(rawCustomer, normalized, customers);
