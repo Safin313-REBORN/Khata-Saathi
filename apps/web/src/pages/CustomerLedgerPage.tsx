@@ -186,19 +186,27 @@ export function CustomerLedgerPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((r) => (
-                    <tr key={r.id} className={r.isReversed ? 'reversed' : ''}>
-                      <td className="mono">{formatShortDate(r.occurredAt)}</td>
-                      <td>{r.note}</td>
-                      <td>
-                        <span className={`tag ${r.type === 'udhaar' ? 'o' : r.type === 'wapis' ? 'g' : ''}`}>
-                          {r.type}
-                        </span>
+                  {rows.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} style={{ color: 'var(--stone)', textAlign: 'center', padding: 20 }}>
+                        No entries yet for this customer.
                       </td>
-                      <td className="r mono">{formatPlain(r.amount)}</td>
-                      <td className="r mono"><b>{formatPlain(r.runningBalance)}</b></td>
                     </tr>
-                  ))}
+                  ) : (
+                    rows.map((r) => (
+                      <tr key={r.id} className={r.isReversed ? 'reversed' : ''}>
+                        <td className="mono">{formatShortDate(r.occurredAt)}</td>
+                        <td>{r.note}</td>
+                        <td>
+                          <span className={`tag ${r.type === 'udhaar' ? 'o' : r.type === 'wapis' ? 'g' : ''}`}>
+                            {r.type}
+                          </span>
+                        </td>
+                        <td className="r mono">{formatPlain(r.amount)}</td>
+                        <td className="r mono"><b>{formatPlain(r.runningBalance)}</b></td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

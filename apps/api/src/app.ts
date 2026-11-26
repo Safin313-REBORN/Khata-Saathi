@@ -346,6 +346,24 @@ export async function buildApp(customProviders?: ProviderRegistry): Promise<Fast
     return { ok: true, ...result };
   });
 
+  app.get('/api/backup', async (_req, reply) => {
+    const [shopMeta, customers, transactions] = await Promise.all([
+      providers.storage.getShopMeta(),
+      providers.storage.listCustomers(),
+      providers.storage.listTransactions(),
+    ]);
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const payload = JSON.stringify(
+      { exportedAt: new Date().toISOString(), shopMeta, customers, transactions },
+      null,
+      2
+    );
+    return reply
+      .header('Content-Type', 'application/json; charset=utf-8')
+      .header('Content-Disposition', `attachment; filename="khata-saathi-backup-${dateStr}.json"`)
+      .send(payload);
+  });
+
   app.post('/api/ocr/import', async (req, reply) => {
     const parsed = OcrImportSchema.safeParse(req.body);
     if (!parsed.success) {

@@ -263,7 +263,11 @@ export function LandingPage() {
         }}
       >
         <span>Khata Saathi · National Hackathon 2026</span>
-        <span>Built in Pakistan. Not financial advice; not a payment system.</span>
+        <span style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+          <Link to="/privacy" style={{ textDecoration: 'underline' }}>Privacy</Link>
+          <Link to="/terms" style={{ textDecoration: 'underline' }}>Terms</Link>
+          <span>Not financial advice; not a payment system.</span>
+        </span>
       </footer>
     </div>
   );

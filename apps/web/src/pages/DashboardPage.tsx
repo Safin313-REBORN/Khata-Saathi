@@ -55,6 +55,7 @@ export function DashboardPage() {
   ]);
   const [pending, setPending] = useState<PendingConfirm | null>(null);
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [listening, setListening] = useState(false);
   const [speechLang, setSpeechLang] = useState<'ur-PK' | 'en-IN'>('ur-PK');
@@ -70,6 +71,8 @@ export function DashboardPage() {
       }
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Could not load khata data.');
+    } finally {
+      setLoading(false);
     }
   }, [selectedId]);
 
@@ -243,6 +246,9 @@ export function DashboardPage() {
           <button type="button" className="btn sm" onClick={handleSeed} disabled={busy}>
             Seed demo data
           </button>
+          <a className="btn sm" href="/api/backup">
+            Backup JSON
+          </a>
           {selectedSummary && (
             <Link className="btn sm p" to={`/app/customers/${selectedSummary.customer.id}`}>
               Open {selectedSummary.customer.name.split(' ')[0]}&apos;s ledger
@@ -275,6 +281,15 @@ export function DashboardPage() {
           <p className="lab" style={{ margin: '0 0 6px', color: 'var(--stone)' }}>
             Customers · to collect first
           </p>
+          {loading && <p style={{ color: 'var(--stone)' }}>Loading customers...</p>}
+          {!loading && customers.length === 0 && (
+            <div className="card" style={{ padding: 16 }}>
+              <b>No customers yet.</b>
+              <p style={{ margin: '6px 0 0', fontSize: 14, color: 'var(--stone)' }}>
+                Say &ldquo;Ali ko 500 ka udhaar likh do&rdquo; or tap Seed demo data above.
+              </p>
+            </div>
+          )}
           {customers.map((c) => {
             const isSelected = selectedSummary?.customer.id === c.customer.id;
             return (
