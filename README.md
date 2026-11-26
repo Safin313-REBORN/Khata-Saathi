@@ -5,6 +5,9 @@ A voice- and text-first *udhaar-khata* ledger assistant for small shopkeepers in
 
 Built for **National Hackathon 2026 (Pakistan)** — Track: *Everyday Productivity & Automation* (also fits *Social Impact*).
 
+**Live Demo:** https://khata-saathi-five.vercel.app
+**GitHub Repo:** https://github.com/Safin313-REBORN/Khata-Saathi
+
 ---
 
 ## The Problem
