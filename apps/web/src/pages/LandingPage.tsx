@@ -2,21 +2,39 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, formatRs, type CustomerSummary, type ShopSummary } from '../api/client';
 import { Logo } from '../components/Logo';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 export function LandingPage() {
   const [shop, setShop] = useState<ShopSummary | null>(null);
   const [customers, setCustomers] = useState<CustomerSummary[]>([]);
+  const [scrollPct, setScrollPct] = useState(0);
+  const [showTop, setShowTop] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     api.getShop().then(setShop).catch(() => undefined);
     api.getCustomers().then((r) => setCustomers(r.customers.slice(0, 4))).catch(() => undefined);
   }, []);
 
+  useEffect(() => {
+    const onScroll = () => {
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - doc.clientHeight;
+      setScrollPct(max > 0 ? Math.min(100, Math.round((window.scrollY / max) * 100)) : 0);
+      setShowTop(window.scrollY > 320);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   const totalToCollect = shop ? formatRs(shop.totalToCollect) : 'Rs 18,450';
 
   return (
     <div>
-      <header style={{ borderBottom: '2px solid var(--ink)' }}>
+      <a className="skip-link" href="#main-content">Skip to content</a>
+      <div className="scroll-progress" style={{ width: `${scrollPct}%` }} aria-hidden="true" />
+
+      <header className="sticky-header">
         <div
           className="wrap"
           style={{
@@ -25,8 +43,8 @@ export function LandingPage() {
             justifyContent: 'space-between',
             flexWrap: 'wrap',
             gap: 12,
-            paddingTop: 18,
-            paddingBottom: 18,
+            paddingTop: 14,
+            paddingBottom: 14,
           }}
         >
           <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 12 }} aria-label="Khata Saathi home">
@@ -36,14 +54,53 @@ export function LandingPage() {
               کھاتہ ساتھی
             </span>
           </Link>
-          <nav style={{ display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
+
+          <nav className="desktop-nav" style={{ display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap' }}>
             <a href="#how" style={{ fontWeight: 700 }}>How it works</a>
             <a href="#book" style={{ fontWeight: 700 }}>The khata</a>
             <a href="#trust" style={{ fontWeight: 700 }}>Why trust it</a>
+            <a href="#faq" style={{ fontWeight: 700 }}>FAQ</a>
+            <ThemeToggle />
             <Link className="btn p" to="/app">Open my khata</Link>
           </nav>
+
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }} className="mobile-menu-btn">
+            <ThemeToggle />
+            <button
+              type="button"
+              className="btn sm"
+              aria-expanded={menuOpen}
+              aria-controls="mobile-menu-drawer"
+              onClick={() => setMenuOpen((o) => !o)}
+            >
+              {menuOpen ? 'Close' : 'Menu'}
+            </button>
+          </div>
         </div>
+
+        {menuOpen && (
+          <nav
+            id="mobile-menu-drawer"
+            className="wrap"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 10,
+              paddingBottom: 16,
+              borderTop: '1.5px solid var(--line)',
+              paddingTop: 12,
+            }}
+          >
+            <a href="#how" onClick={() => setMenuOpen(false)} style={{ fontWeight: 700 }}>How it works</a>
+            <a href="#book" onClick={() => setMenuOpen(false)} style={{ fontWeight: 700 }}>The khata</a>
+            <a href="#trust" onClick={() => setMenuOpen(false)} style={{ fontWeight: 700 }}>Why trust it</a>
+            <a href="#faq" onClick={() => setMenuOpen(false)} style={{ fontWeight: 700 }}>FAQ</a>
+            <Link className="btn p" to="/app" onClick={() => setMenuOpen(false)}>Open my khata</Link>
+          </nav>
+        )}
       </header>
+
+      <main id="main-content">
 
       <section className="wrap" style={{ paddingTop: 60, paddingBottom: 88 }}>
         <div className="split">
@@ -229,6 +286,34 @@ export function LandingPage() {
         </div>
       </section>
 
+      <section id="faq" className="wrap" style={{ paddingTop: 40, paddingBottom: 80 }}>
+        <h2 className="h" style={{ fontSize: 'clamp(30px, 3.8vw, 46px)', marginBottom: 24 }}>
+          Common questions
+        </h2>
+        <div style={{ display: 'grid', gap: 14, maxWidth: 820 }}>
+          <details className="faq-item">
+            <summary>Does Khata Saathi work without an internet connection or cloud account?</summary>
+            <p style={{ margin: '10px 0 0', color: 'var(--stone)' }}>
+              Yes. Everything runs locally on SQLite and deterministic TypeScript code with no cloud account required,
+              and the PWA caches your ledger for offline reading.
+            </p>
+          </details>
+          <details className="faq-item">
+            <summary>Can I fix a mistake after confirming an entry?</summary>
+            <p style={{ margin: '10px 0 0', color: 'var(--stone)' }}>
+              Yes. Open the customer&apos;s ledger and tap Undo last entry. It appends a reversing adjustment so the
+              history stays complete and transparent.
+            </p>
+          </details>
+          <details className="faq-item">
+            <summary>Are WhatsApp reminders sent automatically?</summary>
+            <p style={{ margin: '10px 0 0', color: 'var(--stone)' }}>
+              Never. Reminders are drafts only; nothing is sent until you tap Open in WhatsApp or Copy text yourself.
+            </p>
+          </details>
+        </div>
+      </section>
+
       <section style={{ background: 'var(--grn)', color: '#fff', borderTop: '2px solid var(--ink)' }}>
         <div
           className="wrap"
@@ -248,6 +333,7 @@ export function LandingPage() {
           <Link className="btn lg" to="/app" style={{ color: 'var(--ink)' }}>Open my khata</Link>
         </div>
       </section>
+      </main>
 
       <footer
         className="wrap"
@@ -262,13 +348,24 @@ export function LandingPage() {
           fontSize: 15,
         }}
       >
-        <span>Khata Saathi · National Hackathon 2026</span>
+        <span>Khata Saathi · National Hackathon 2026 · Last updated: 27 Nov 2026</span>
         <span style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
           <Link to="/privacy" style={{ textDecoration: 'underline' }}>Privacy</Link>
           <Link to="/terms" style={{ textDecoration: 'underline' }}>Terms</Link>
           <span>Not financial advice; not a payment system.</span>
         </span>
       </footer>
+
+      {showTop && (
+        <button
+          type="button"
+          className="btn sm back-to-top"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          aria-label="Back to top"
+        >
+          Top
+        </button>
+      )}
     </div>
   );
 }

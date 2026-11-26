@@ -9,6 +9,7 @@ import {
   type ShopSummary,
 } from '../api/client';
 import { Logo } from '../components/Logo';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 interface ChatMessage {
   id: string;
@@ -43,6 +44,7 @@ export function DashboardPage() {
   const [shop, setShop] = useState<ShopSummary | null>(null);
   const [customers, setCustomers] = useState<CustomerSummary[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [mobileTab, setMobileTab] = useState<'bolo' | 'customers' | 'reminders'>('bolo');
 
   const [inputText, setInputText] = useState('');
@@ -249,6 +251,7 @@ export function DashboardPage() {
           <a className="btn sm" href="/api/backup">
             Backup JSON
           </a>
+          <ThemeToggle />
           {selectedSummary && (
             <Link className="btn sm p" to={`/app/customers/${selectedSummary.customer.id}`}>
               Open {selectedSummary.customer.name.split(' ')[0]}&apos;s ledger
@@ -281,6 +284,22 @@ export function DashboardPage() {
           <p className="lab" style={{ margin: '0 0 6px', color: 'var(--stone)' }}>
             Customers · to collect first
           </p>
+          <input
+            type="search"
+            aria-label="Search customers"
+            placeholder="Search customers..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              minHeight: 44,
+              padding: '0 12px',
+              border: '2px solid var(--ink)',
+              borderRadius: 8,
+              fontSize: 15,
+              marginBottom: 8,
+              background: '#fff',
+            }}
+          />
           {loading && <p style={{ color: 'var(--stone)' }}>Loading customers...</p>}
           {!loading && customers.length === 0 && (
             <div className="card" style={{ padding: 16 }}>
@@ -290,7 +309,9 @@ export function DashboardPage() {
               </p>
             </div>
           )}
-          {customers.map((c) => {
+          {customers
+            .filter((c) => c.customer.name.toLowerCase().includes(searchQuery.trim().toLowerCase()))
+            .map((c) => {
             const isSelected = selectedSummary?.customer.id === c.customer.id;
             return (
               <div key={c.customer.id} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>

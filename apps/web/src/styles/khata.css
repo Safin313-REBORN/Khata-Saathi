@@ -10,6 +10,26 @@
   --tgrn: #CBE6D6;
 }
 
+[data-theme='dark'] {
+  --led: #101A15;
+  --paper: #18261F;
+  --ink: #F5EEDC;
+  --grn: #1A8F6A;
+  --saf: #F2A33A;
+  --brk: #F0715B;
+  --line: #2F4238;
+  --stone: #B8C4B2;
+  --tgrn: #1F3B2E;
+}
+
+[data-theme='dark'] .entry-pop,
+[data-theme='dark'] .composer input,
+[data-theme='dark'] select,
+[data-theme='dark'] input {
+  background: #14201A;
+  color: var(--ink);
+}
+
 *,
 *::before,
 *::after {
@@ -40,6 +60,76 @@ button {
 :focus-visible {
   outline: 4px solid var(--saf);
   outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 8px;
+  z-index: 100;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.skip-link:focus {
+  left: 12px;
+}
+
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  background: var(--led);
+  border-bottom: 2px solid var(--ink);
+}
+
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 4px;
+  background: var(--saf);
+  z-index: 50;
+  transition: width 0.08s linear;
+}
+
+.back-to-top {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 35;
+}
+
+.faq-item {
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.faq-item summary {
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mobile-menu-btn {
+  display: none;
+}
+
+@media (max-width: 899px) {
+  .desktop-nav {
+    display: none !important;
+  }
+  .mobile-menu-btn {
+    display: inline-flex;
+  }
 }
 
 .h {
