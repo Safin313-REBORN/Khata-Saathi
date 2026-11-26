@@ -4,6 +4,9 @@
   "private": true,
   "description": "Voice/text udhaar-khata ledger assistant for small shopkeepers in Pakistan",
   "license": "MIT",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "pnpm --parallel --filter @khata-saathi/api --filter @khata-saathi/web dev",
     "build": "pnpm -r build",
