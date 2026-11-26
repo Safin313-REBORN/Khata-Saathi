@@ -62,16 +62,21 @@ export async function buildApp(customProviders?: ProviderRegistry): Promise<Fast
   const providers = customProviders ?? createProviders();
 
   const allowedOrigins = (
-    process.env.CORS_ORIGINS ?? 'http://localhost:5173,http://127.0.0.1:5173,http://localhost:3001,http://127.0.0.1:3001'
+    process.env.CORS_ORIGINS ??
+    'http://localhost:5173,http://127.0.0.1:5173,http://localhost:3001,http://127.0.0.1:3001,https://khata-saathi-five.vercel.app'
   )
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
 
+  if (process.env.VERCEL_URL) {
+    allowedOrigins.push(`https://${process.env.VERCEL_URL}`);
+  }
+
   await app.register(cors, {
     origin: (origin, cb) => {
-      // Allow same-origin / non-browser requests (no Origin header) and configured origins
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Allow same-origin / non-browser requests (no Origin header), configured origins, and *.vercel.app
+      if (!origin || allowedOrigins.includes(origin) || /^https:\/\/khata-saathi[a-z0-9-]*\.vercel\.app$/.test(origin)) {
         cb(null, true);
         return;
       }
