@@ -1,7 +1,11 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Logo } from '../components/Logo';
 
 export function NotFoundPage() {
+  useEffect(() => {
+    document.title = '404 · Khata Saathi';
+  }, []);
   return (
     <div className="app-shell">
       <header className="app-top">

@@ -79,6 +79,7 @@ export function DashboardPage() {
   }, [selectedId]);
 
   useEffect(() => {
+    document.title = 'Shop Counter · Khata Saathi';
     loadData();
   }, [loadData]);
 

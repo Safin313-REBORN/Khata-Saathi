@@ -51,6 +51,10 @@ export function CustomerLedgerPage() {
   }, [id, lang, tone]);
 
   useEffect(() => {
+    document.title = customer ? `${customer.name} · Khata Saathi` : 'Customer Ledger · Khata Saathi';
+  }, [customer]);
+
+  useEffect(() => {
     loadLedger();
   }, [loadLedger]);
 
@@ -141,6 +145,13 @@ export function CustomerLedgerPage() {
                 Customer · since {sinceDate}
               </p>
               <h1 className="h" style={{ fontSize: 44 }}>{customer.name}</h1>
+              {customer.phone && (
+                <p style={{ margin: '6px 0 0', fontSize: 15 }}>
+                  <a href={`tel:+${customer.phone}`} style={{ color: 'var(--grn)', fontWeight: 600, textDecoration: 'underline' }}>
+                    +{customer.phone}
+                  </a>
+                </p>
+              )}
             </div>
             <div style={{ textAlign: 'right' }}>
               <p className="lab" style={{ margin: 0, color: 'var(--stone)' }}>Balance to collect</p>
