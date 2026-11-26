@@ -116,6 +116,7 @@ export class AwsDynamoDbStorageStub implements Storage {
   async clearAll() {
     this.customers = [];
     this.transactions = [];
+    this.seq = 1;
   }
 }
 
