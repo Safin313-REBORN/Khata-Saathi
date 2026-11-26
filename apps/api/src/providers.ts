@@ -55,9 +55,11 @@ export function createProviders(env: NodeJS.ProcessEnv = process.env): ProviderR
         ? new AwsComprehendNluStub()
         : new RuleBasedLanguageUnderstanding();
 
-  const dbPath = env.SQLITE_PATH || path.resolve(process.cwd(), 'storage/khata.db');
+  const dbPath = env.SQLITE_PATH || (env.VERCEL ? '/tmp/khata.db' : path.resolve(process.cwd(), 'storage/khata.db'));
   const storage: Storage =
-    storageMode === 'aws-dynamodb' ? new AwsDynamoDbStorageStub() : new SqliteStorage(dbPath);
+    storageMode === 'aws-dynamodb' || (env.VERCEL === '1' && !env.STORAGE_PROVIDER)
+      ? new AwsDynamoDbStorageStub()
+      : new SqliteStorage(dbPath);
 
   const filesDir = env.FILESTORE_DIR || path.resolve(process.cwd(), 'storage/files');
   const fileStore: FileStore =
